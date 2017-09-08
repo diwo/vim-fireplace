@@ -8,6 +8,14 @@ if exists("g:loaded_fireplace") || v:version < 700 || &cp
 endif
 let g:loaded_fireplace = 1
 
+if !exists("g:fireplace_piggieback_default_repl_env")
+  let g:fireplace_default_repl_env = "(cljs.repl.rhino/repl-env)"
+endif
+
+if !exists("g:fireplace_piggieback_repl_prepare")
+  let g:fireplace_piggieback_repl_prepare = ""
+endif
+
 " Section: File type
 
 augroup fireplace_file_type
@@ -291,7 +299,7 @@ function! s:repl.piggieback(arg, ...) abort
 
   let connection = s:conn_try(self.connection, 'clone')
   if empty(a:arg)
-    let arg = '(cljs.repl.rhino/repl-env)'
+    let arg = g:fireplace_piggieback_default_repl_env
   elseif a:arg =~# '^\d\{1,5}$'
     let replns = 'weasel.repl.websocket'
     if has_key(connection.eval("(require '" . replns . ")"), 'ex')
@@ -303,7 +311,7 @@ function! s:repl.piggieback(arg, ...) abort
   else
     let arg = a:arg
   endif
-  let response = connection.eval('(cemerick.piggieback/cljs-repl'.' '.arg.')')
+  let response = connection.eval(g:fireplace_piggieback_repl_prepare . '(cemerick.piggieback/cljs-repl'.' '.arg.')')
 
   if empty(get(response, 'ex'))
     call insert(self.piggiebacks, extend({'connection': connection}, deepcopy(s:piggieback)))
